@@ -1,0 +1,174 @@
+<project default="all">
+  <property name="project" value="file-downloader" />
+  <property name="title" value="File Downloader" />
+  <property name="version" value="SNAPSHOT" />  <!-- Change to YYYYMMDD format for release. -->
+  <property name="main-class" value="sg.yeefan.filedownloader.FileDownloader" />
+  <property name="class-path" value="" />
+  <property name="dist-copy-bin" value="README.TXT LICENSE.TXT" />
+  <property name="dist-copy-src" value="README.TXT LICENSE.TXT BUILD.TXT" />
+  <property name="ant-version" value="1.7" />
+
+  <property name="date.pattern" value="yyyyMMdd" />
+  <property name="src" location="src" />
+  <property name="res" location="res" />
+  <property name="lib" location="lib" />
+  <property name="build" location="build" />
+  <property name="build.classes" location="${build}/classes" />
+  <property name="build.doc" location="${build}/doc" />
+  <property name="dist" location="dist" />
+  <property name="dist.bin" location="${dist}/bin" />
+  <property name="dist.bin.release" location="${dist.bin}/${project}-${version}" />
+  <property name="dist.bin.release.version" location="${dist.bin.release}/VERSION.TXT" />
+  <property name="dist.bin.release.doc" location="${dist.bin.release}/doc" />
+  <property name="dist.bin.zip" location="${dist}/${project}-${version}.zip" />
+  <property name="dist.src" location="${dist}/src" />
+  <property name="dist.src.release" location="${dist.src}/${project}-${version}" />
+  <property name="dist.src.release.version" location="${dist.src.release}/VERSION.TXT" />
+  <property name="dist.src.release.src" location="${dist.src.release}/src" />
+  <property name="dist.src.release.res" location="${dist.src.release}/res" />
+  <property name="dist.src.release.lib" location="${dist.src.release}/lib" />
+  <property name="dist.src.zip" location="${dist}/${project}-${version}-src.zip" />
+
+  <fail message="Ant version ${ant-version} or later is required.">
+    <condition>
+      <not>
+        <antversion atleast="${ant-version}" />
+      </not>
+    </condition>
+  </fail>
+
+  <tstamp prefix="timestamp">
+    <format property="short" pattern="${date.pattern}" />
+  </tstamp>
+  <condition property="date" value="${version}" else="${timestamp.short}">
+    <matches string="${version}" pattern="^[0-3][0-9][0-9][0-9][0-1][0-9][0-3][0-9]$" />
+  </condition>
+  <property name="version.text" value="Version ${version}." />
+
+  <target name="build" depends="clean.build,-build.init,-build.classes,-build.jar,-build.doc">
+    <touch datetime="${date}" pattern="${date.pattern}">
+      <fileset dir="${build}" />
+    </touch>
+  </target>
+  <target name="-build.init">
+    <mkdir dir="${src}" />
+    <mkdir dir="${res}" />
+    <mkdir dir="${lib}" />
+  </target>
+  <target name="-build.classes">
+    <mkdir dir="${build.classes}" />
+    <javac srcdir="${src}" destdir="${build.classes}" includeantruntime="false" debug="on">
+      <classpath>
+        <fileset dir="${lib}">
+          <include name="**/*.jar" />
+        </fileset>
+      </classpath>
+    </javac>
+    <copy todir="${build.classes}">
+      <fileset dir="${res}" />
+    </copy>
+    <touch datetime="${date}" pattern="${date.pattern}">
+      <fileset dir="${build.classes}" />
+    </touch>
+  </target>
+  <target name="-build.jar" depends="-build.classes">
+    <jar destfile="${build}/${project}.jar" basedir="${build.classes}">
+      <manifest>
+        <attribute name="Main-Class" value="${main-class}" />
+        <attribute name="Class-Path" value="${class-path}" />
+      </manifest>
+    </jar>
+    <copy todir="${build}">
+      <fileset dir="${lib}" />
+    </copy>
+    <touch datetime="${date}" pattern="${date.pattern}">
+      <fileset dir="${build}">
+        <include name="**/*.jar" />
+      </fileset>
+    </touch>
+  </target>
+  <target name="-build.doc">
+    <javadoc destdir="${build.doc}" use="true" windowtitle="${title}">
+      <sourcefiles>
+        <fileset dir="${src}">
+          <include name="**/*.java" />
+        </fileset>
+      </sourcefiles>
+      <classpath>
+        <fileset dir="${lib}">
+          <include name="**/*.jar" />
+        </fileset>
+      </classpath>
+    </javadoc>
+    <touch datetime="${date}" pattern="${date.pattern}">
+      <fileset dir="${build.doc}" />
+    </touch>
+  </target>
+
+  <target name="dist" depends="clean.dist,-dist.bin,-dist.src">
+    <touch datetime="${date}" pattern="${date.pattern}">
+      <fileset dir="${dist}" />
+    </touch>
+  </target>
+  <target name="-dist.bin" depends="-dist.bin.release">
+    <zip destfile="${dist.bin.zip}" basedir="${dist.bin}" />
+    <touch datetime="${date}" pattern="${date.pattern}">
+      <fileset dir="${dist.bin}" />
+    </touch>
+  </target>
+  <target name="-dist.bin.release" depends="build">
+    <mkdir dir="${dist.bin.release}" />
+    <copy todir="${dist.bin.release}">
+      <fileset dir="${build}">
+        <include name="**/*.jar" />
+      </fileset>
+    </copy>
+    <copy todir="${dist.bin.release.doc}">
+      <fileset dir="${build.doc}" />
+    </copy>
+    <copy todir="${dist.bin.release}">
+      <fileset dir="${basedir}" includes="${dist-copy-bin}" />
+    </copy>
+    <echo file="${dist.bin.release.version}" message="${version.text}" />
+    <touch datetime="${date}" pattern="${date.pattern}">
+      <fileset dir="${dist.bin.release}" />
+    </touch>
+  </target>
+  <target name="-dist.src" depends="-dist.src.release">
+    <zip destfile="${dist.src.zip}" basedir="${dist.src}" />
+    <touch datetime="${date}" pattern="${date.pattern}">
+      <fileset dir="${dist.src}" />
+    </touch>
+  </target>
+  <target name="-dist.src.release">
+    <mkdir dir="${dist.src.release}" />
+    <copy todir="${dist.src.release.src}">
+      <fileset dir="${src}" />
+    </copy>
+    <copy todir="${dist.src.release.res}">
+      <fileset dir="${res}" />
+    </copy>
+    <copy todir="${dist.src.release.lib}">
+      <fileset dir="${lib}" />
+    </copy>
+    <copy todir="${dist.src.release}">
+      <fileset dir="${basedir}" includes="${dist-copy-src}" />
+    </copy>
+    <copy file="build.xml" todir="${dist.src.release}" />
+    <echo file="${dist.src.release.version}" message="${version.text}" />
+    <touch datetime="${date}" pattern="${date.pattern}">
+      <fileset dir="${dist.src.release}" />
+    </touch>
+  </target>
+
+  <target name="all" depends="build,dist" />
+
+  <target name="clean" depends="clean.build,clean.dist" />
+  <target name="clean.build">
+    <delete dir="${build}" />
+  </target>
+  <target name="clean.dist">
+    <delete dir="${dist}" />
+  </target>
+</project>
+
